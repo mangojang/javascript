@@ -2,7 +2,14 @@ const tbody = document.querySelector("#table tbody");
 let  dataset =[];
 let stop_flag = false;
 let open_square = 0;
-
+/// 딕셔너리 작성
+const code_table ={
+    cd_mine = 'X'
+    ,cd_flag_mine='X'
+    ,cd_flag='2'
+    ,cd_clicked='1'
+    ,cd_default='0'
+}
 
 document.querySelector("#exec").addEventListener("click",function(){
     //0. 내부 초기화
@@ -11,8 +18,6 @@ document.querySelector("#exec").addEventListener("click",function(){
     dataset=[];
     stop_flag=false;
     open_square = 0;
-
-
 
     const hor = parseInt(document.querySelector("#hor").value);
     const ver = parseInt(document.querySelector("#ver").value);
@@ -45,15 +50,17 @@ document.querySelector("#exec").addEventListener("click",function(){
             td.addEventListener('contextmenu',function(e){
                 // 컨텍스트 메뉴창 뜨는거 막기
                 e.preventDefault();
-                //플래그 함수 설정
-                if(stop_flag){
-                    return;
-                }
+                
                 //클릭시, 줄 칸 몇번째 인지 알아내기
                 const parent_tr = e.currentTarget.parentNode;
                 const parent_tbody =  e.currentTarget.parentNode.parentNode;
                 const column = Array.prototype.indexOf.call(parent_tr.children,e.currentTarget);
                 const row= Array.prototype.indexOf.call(parent_tbody.children,parent_tr);
+                
+                //플래그 함수 설정
+                if(stop_flag || dataset[column][row]===code_table.cd_clicked){
+                    return;
+                }
                 // this.textContent='!';
                 // dataset[row][column]='!';
                 // console.log("여기요",row,column);
@@ -63,16 +70,28 @@ document.querySelector("#exec").addEventListener("click",function(){
                 //e.currentTarget : 이벤트 리스너를 단 대상
                 //e.target : 이벤트가 실행되는 대상 
 
+                console.log('우클릭값',dataset[row][column]);
+
                 //중복 클릭시 이벤트
-                if(e.currentTarget.textContent==='' || e.currentTarget.textContent==='X'){
+                if(e.currentTarget.textContent=== '' || e.currentTarget.textContent==='X'){
                     e.currentTarget.textContent='!';
+                    if(dataset[row][column]===code_table.cd_mine){
+                        dataset[row][column] = code_table.cd_flag_mine;
+                    }else{
+                        dataset[row][column] = code_table.cd_flag;
+                    }
                 }else if(e.currentTarget.textContent==='!'){
                     e.currentTarget.textContent='?';
+                    if(dataset[row][column]!==code_table.cd_flag_mine){
+                        dataset[row][column] = code_table.cd_flag;
+                    }
                 }else if(e.currentTarget.textContent==='?'){
-                    if(dataset[row][column]==="X"){
+                    if(dataset[row][column]===code_table.cd_flag_mine){
                         e.currentTarget.textContent='X';
+                        dataset[row][column] = code_table.cd_mine;
                     }else{
                         e.currentTarget.textContent='';
+                        dataset[row][column] = code_table.cd_default;
                     }
                 }
             });
@@ -87,13 +106,13 @@ document.querySelector("#exec").addEventListener("click",function(){
                 const column = Array.prototype.indexOf.call(parent_tr.children,e.currentTarget);
                 const row= Array.prototype.indexOf.call(parent_tbody.children,parent_tr);
                 
-                if(dataset[row][column]===1){
+                if(dataset[row][column]===code_table.cd_clicked || dataset[row][column]===code_table.cd_flag || dataset[row][column]===code_table.cd_flag_mine){
                     return;
                 }
                 e.currentTarget.classList.add('opend');
                 open_square += 1;
                 console.log('클릭 갯수', open_square);
-                if(dataset[row][column]==='X'){
+                if(dataset[row][column]===code_table.cd_mine){
                     e.currentTarget.textContent='펑';
                     stop_flag= true;
                     document.getElementById("result").textContent='실패!!!'
@@ -107,7 +126,8 @@ document.querySelector("#exec").addEventListener("click",function(){
                         arround= arround.concat([ dataset[row+1][column-1],dataset[row+1][column],dataset[row+1][column+1] ])
                     }
                     console.log ('around',arround);
-                    const arround_mine_count = arround.filter(function(v){return v==='X'}).length;
+                    
+                    const arround_mine_count = arround.filter(function(v){return v===code_table.cd_mine || v===code_table.cd_flag_mine}).length;
                     e.currentTarget.textContent = arround_mine_count || ''; 
                     console.log('count', typeof(arround_mine_count));
                 
@@ -174,7 +194,7 @@ document.querySelector("#exec").addEventListener("click",function(){
         const saero = Math.floor(shuffle[k]/ver);
         const garo = shuffle[k]%hor;
         tbody.children[saero].children[garo].textContent='X';
-        dataset[saero][garo]='X';
+        dataset[saero][garo]=code_table.cd_mine;
     }
 
     
